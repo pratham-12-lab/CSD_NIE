@@ -33,24 +33,41 @@ const CompanyCreate = () => {
         }
     }
     return (
-        <div>
+        <div className='min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'>
             <Navbar />
-            <div className='max-w-4xl mx-auto'>
-                <div className='my-10'>
-                    <h1 className='font-bold text-2xl'>Your Company Name</h1>
-                    <p className='text-gray-500'>What would you like to give your company name? you can change this later.</p>
-                </div>
+            <div className='max-w-4xl mx-auto py-8'>
+                <div className='bg-white/90 backdrop-blur-sm border border-gray-200 shadow-2xl rounded-xl p-8 transform transition-all duration-500 hover:shadow-3xl animate-in fade-in slide-in-from-bottom-4'>
+                    <div className='mb-8'>
+                        <h1 className='font-bold text-3xl mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent transition-all duration-300'>
+                            Your Company Name
+                        </h1>
+                        <p className='text-gray-600 text-lg'>What would you like to give your company name? You can change this later.</p>
+                    </div>
 
-                <Label>Company Name</Label>
-                <Input
-                    type="text"
-                    className="my-2"
-                    placeholder="JobHunt, Microsoft etc."
-                    onChange={(e) => setCompanyName(e.target.value)}
-                />
-                <div className='flex items-center gap-2 my-10'>
-                    <Button variant="outline" onClick={() => navigate("/admin/companies")}>Cancel</Button>
-                    <Button onClick={registerNewCompany}>Continue</Button>
+                    <div className='mb-6'>
+                        <Label className='mb-2 block font-medium text-gray-700 text-lg'>Company Name</Label>
+                        <Input
+                            type="text"
+                            className="transition-all duration-300 hover:border-blue-400 focus:ring-blue-500"
+                            placeholder="JobHunt, Microsoft etc."
+                            onChange={(e) => setCompanyName(e.target.value)}
+                        />
+                    </div>
+                    <div className='flex items-center gap-3 mt-8'>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => navigate("/admin/companies")}
+                            className='transition-all duration-300 hover:bg-gray-100'
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={registerNewCompany}
+                            className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
+                        >
+                            Continue
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

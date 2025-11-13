@@ -13,16 +13,33 @@ const ApplicantsTable = () => {
     const { applicants } = useSelector(store => store.application);
 
     const statusHandler = async (status, id) => {
-        console.log('called');
         try {
+            let message = '';
+            const normalizedStatus = status.toLowerCase();
+
+            if (normalizedStatus === 'rejected') {
+                message = window.prompt('Please provide feedback for the candidate (this will be emailed to them):');
+                if (!message || !message.trim()) {
+                    toast.error('Feedback is required to reject an applicant.');
+                    return;
+                }
+            } else if (normalizedStatus === 'accepted') {
+                const optionalMessage = window.prompt('Optional: add a short message for the candidate (press Cancel to skip).');
+                if (optionalMessage && optionalMessage.trim()) {
+                    message = optionalMessage.trim();
+                }
+            }
+
             axios.defaults.withCredentials = true;
-            const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status });
-            console.log(res);
+            const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status, message });
             if (res.data.success) {
                 toast.success(res.data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error?.response?.data?.message || 'Failed to update status');
         }
     }
 

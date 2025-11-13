@@ -14,25 +14,52 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    password:{
-        type:String,
-        required:true,
+    password: {
+        type: String,
+        required: true,
     },
-    role:{
-        type:String,
-        enum:['student','recruiter'],
-        required:true
+    role: {
+        type: String,
+        enum: ['student', 'recruiter', 'admin'],
+        required: true
     },
-    profile:{
-        bio:{type:String},
-        skills:[{type:String}],
-        resume:{type:String}, // URL to resume file
-        resumeOriginalName:{type:String},
-        company:{type:mongoose.Schema.Types.ObjectId, ref:'Company'}, 
-        profilePhoto:{
-            type:String,
-            default:""
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    companyName: {
+        type: String,
+        default: ""
+    },
+    companyWebsite: {
+        type: String,
+        default: ""
+    },
+    rejectionReason: {
+        type: String,
+        default: ""
+    },
+    // ✅ NEW: Saved Jobs
+    savedJobs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job'
+    }],
+    profile: {
+        bio: { type: String },
+        skills: [{ type: String }],
+        resume: { type: String },
+        resumeOriginalName: { type: String },
+        company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+        profilePhoto: {
+            type: String,
+            default: ""
         }
     },
-},{timestamps:true});
+}, { timestamps: true });
+
 export const User = mongoose.model('User', userSchema);
