@@ -66,14 +66,22 @@ class EmailService {
     return await this.sendEmail(employerEmail, subject, html);
   }
 
-  async sendApplicationStatusUpdate(candidateEmail, candidateName, jobTitle, status, message = '') {
-    const { subject, html } = emailTemplates.applicationStatusUpdate(
-      candidateName,
-      jobTitle,
-      status,
-      message
-    );
-    return await this.sendEmail(candidateEmail, subject, html);
+  // ✅ UPDATED: Application status email logic with rejection reason
+  async sendApplicationStatusUpdate(candidateEmail, candidateName, jobTitle, status, reason = '') {
+    console.log('📧 sendApplicationStatusUpdate called with:', { candidateEmail, candidateName, jobTitle, status, reason, reasonLength: reason ? reason.length : 0 });
+    const { subject, html } = emailTemplates.applicationStatusUpdate(candidateName, jobTitle, status, reason);
+    
+    try {
+      const info = await transporter.sendMail({
+        from: `"${process.env.APP_NAME || 'Job Portal'}" <${process.env.SMTP_USER}>`,
+        to: candidateEmail,
+        subject,
+        html,
+      });
+      console.log('✅ Status email sent:', info.messageId);
+    } catch (error) {
+      console.error('❌ Failed to send status email:', error.message);
+    }
   }
 
   async sendBulkEmails(recipients, subject, html) {
@@ -106,10 +114,9 @@ class EmailService {
     });
   }
 
-  // ✅ NEW: Send job alert email
+  // ✅ Job alert email (unchanged)
   async sendJobAlertEmail(email, name, job) {
     const subject = `🚨 New Job Alert: ${job.title}`;
-
     const html = `
       <!DOCTYPE html>
       <html>

@@ -14,6 +14,7 @@ import adminRoutes from "./routes/admin.route.js";
 import savedJobRoutes from "./routes/savedJob.route.js";
 import jobAlertRoutes from "./routes/jobAlert.route.js";
 import chatbotRoutes from './routes/chatbot.routes.js';
+import analyticsRoutes from './routes/analytics.route.js';
 
 dotenv.config();
 connectDB();
@@ -41,6 +42,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
 app.use("/api/job-alerts", jobAlertRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

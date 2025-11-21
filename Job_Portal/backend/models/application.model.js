@@ -19,6 +19,11 @@ const applicationSchema = new mongoose.Schema({
     feedback:{
         type:String,
         default:''
+    },
+    rejectionReason:{
+        type:String,
+        default:''
     }
 },{timestamps:true});
-export const Application  = mongoose.model("Application", applicationSchema);
+
+export const Application = mongoose.model("Application", applicationSchema);

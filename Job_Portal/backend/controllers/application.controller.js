@@ -20,10 +20,15 @@ export const applyJob = async (req, res) => {
     const existingApplication = await Application.findOne({ job: jobId, applicant: userId });
 
     if (existingApplication) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already applied for this job."
-      });
+      // Allow reapplication only if the previous application was rejected
+      if (existingApplication.status !== 'rejected') {
+        return res.status(400).json({
+          success: false,
+          message: "You have already applied for this job."
+        });
+      }
+      // If rejected, delete the old application and create a new one
+      await Application.findByIdAndDelete(existingApplication._id);
     }
 
     // Check if job exists
@@ -119,12 +124,13 @@ export const getAppliedJobs = async (req, res) => {
   }
 };
 
-// ✅ GET APPLICANTS FOR A JOB (For employers)
+// ✅ GET APPLICANTS FOR A JOB (For employers) - Only Pending
 export const getApplicants = async (req, res) => {
   try {
     const jobId = req.params.id;
     const job = await Job.findById(jobId).populate({
       path: 'applications',
+      match: { status: 'pending' }, // ✅ Only fetch pending applications
       options: { sort: { createdAt: -1 } },
       populate: {
         path: 'applicant'
@@ -155,8 +161,10 @@ export const getApplicants = async (req, res) => {
 // ✅ UPDATE APPLICATION STATUS (For employers)
 export const updateStatus = async (req, res) => {
   try {
+    const { id: applicationId } = req.params;
     const { status, message } = req.body;
-    const applicationId = req.params.id;
+
+    console.log('📝 updateStatus called with:', { applicationId, status, message, messageLength: message ? message.length : 0 });
 
     if (!status) {
       return res.status(400).json({
@@ -165,56 +173,47 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    // Find the application
-    const application = await Application.findOne({ _id: applicationId })
-      .populate({
-        path: 'applicant'
-      })
-      .populate({
-        path: 'job'
+    // Normalize status to lowercase for comparisons
+    const normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus === 'rejected' && !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required.'
       });
+    }
+
+    const update = { status: normalizedStatus };
+    if (normalizedStatus === 'rejected') update.rejectionReason = message;
+    else update.rejectionReason = '';
+
+    const application = await Application.findByIdAndUpdate(applicationId, update, { new: true })
+      .populate('applicant')
+      .populate('job');
 
     if (!application) {
       return res.status(404).json({
         success: false,
-        message: "Application not found."
+        message: 'Application not found.'
       });
     }
-
-    const normalizedStatus = status.toLowerCase();
-    let feedbackMessage = message?.trim() || '';
-
-    if (normalizedStatus === 'rejected' && !feedbackMessage) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rejection feedback is required'
-      });
-    }
-
-    // Update status and feedback
-    application.status = normalizedStatus;
-    if (feedbackMessage) {
-      application.feedback = feedbackMessage;
-    } else if (normalizedStatus !== 'rejected') {
-      application.feedback = '';
-    }
-
-    await application.save();
 
     // ✅ Send status update email to candidate
     if (application.applicant && application.applicant.email) {
+      console.log('📧 Sending email with rejection reason:', { message, status: normalizedStatus });
       await emailService.sendApplicationStatusUpdate(
         application.applicant.email,
         application.applicant.fullname,
         application.job.title,
         normalizedStatus,
-        feedbackMessage
+        normalizedStatus === 'rejected' ? message : ''
       );
     }
 
     return res.status(200).json({
       success: true,
-      message: "Application status updated successfully! Notification sent to candidate."
+      message: "Application status updated successfully! Notification sent to candidate.",
+      application
     });
 
   } catch (error) {

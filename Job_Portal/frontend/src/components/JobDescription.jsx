@@ -11,8 +11,18 @@ import { toast } from 'sonner';
 const JobDescription = () => {
     const {singleJob} = useSelector(store => store.job);
     const {user} = useSelector(store=>store.auth);
-    const isIntiallyApplied = singleJob?.applications?.some(application => application.applicant === user?._id) || false;
-    const [isApplied, setIsApplied] = useState(isIntiallyApplied);
+    
+    // Check if user has an active application (not rejected)
+    const hasActiveApplication = singleJob?.applications?.some(
+        application => application.applicant === user?._id && application.status !== 'rejected'
+    ) || false;
+    
+    // Check if user has a rejected application
+    const hasRejectedApplication = singleJob?.applications?.some(
+        application => application.applicant === user?._id && application.status === 'rejected'
+    ) || false;
+    
+    const [isApplied, setIsApplied] = useState(hasActiveApplication || hasRejectedApplication);
 
     const params = useParams();
     const jobId = params.id;
@@ -24,7 +34,13 @@ const JobDescription = () => {
             
             if(res.data.success){
                 setIsApplied(true); // Update the local state
-                const updatedSingleJob = {...singleJob, applications:[...singleJob.applications,{applicant:user?._id}]}
+                
+                // If reapplying, remove old application from display
+                let updatedApplications = singleJob.applications.filter(
+                    app => !(app.applicant === user?._id && app.status === 'rejected')
+                );
+                
+                const updatedSingleJob = {...singleJob, applications:[...updatedApplications,{applicant:user?._id}]}
                 dispatch(setSingleJob(updatedSingleJob)); // helps us to real time UI update
                 toast.success(res.data.message);
 
@@ -50,6 +66,17 @@ const JobDescription = () => {
         fetchSingleJob(); 
     },[jobId,dispatch, user?._id]);
 
+    // Update isApplied state when singleJob or user changes
+    useEffect(() => {
+        const hasActiveApplication = singleJob?.applications?.some(
+            application => application.applicant === user?._id && application.status !== 'rejected'
+        ) || false;
+        const hasRejectedApplication = singleJob?.applications?.some(
+            application => application.applicant === user?._id && application.status === 'rejected'
+        ) || false;
+        setIsApplied(hasActiveApplication || hasRejectedApplication);
+    }, [singleJob, user?._id]);
+
     return (
         <div className='max-w-7xl mx-auto my-10'>
             <div className='flex items-center justify-between'>
@@ -62,10 +89,10 @@ const JobDescription = () => {
                     </div>
                 </div>
                 <Button
-                onClick={isApplied ? null : applyJobHandler}
-                    disabled={isApplied}
-                    className={`rounded-lg ${isApplied ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#7209b7] hover:bg-[#5f32ad]'}`}>
-                    {isApplied ? 'Already Applied' : 'Apply Now'}
+                onClick={hasActiveApplication ? null : applyJobHandler}
+                    disabled={hasActiveApplication}
+                    className={`rounded-lg ${hasActiveApplication ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#7209b7] hover:bg-[#5f32ad]'}`}>
+                    {hasActiveApplication ? 'Already Applied' : hasRejectedApplication ? 'Reapply Now' : 'Apply Now'}
                 </Button>
             </div>
             <h1 className='border-b-2 border-b-gray-300 font-medium py-4'>Job Description</h1>

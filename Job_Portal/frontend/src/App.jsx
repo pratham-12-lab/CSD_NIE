@@ -28,6 +28,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import ProtectedRoute from './components/admin/ProtectedRoute';
 
 import Chatbot from './components/Chatbot/Chatbot';
+import AnalyticsDashboard from './components/analytics/AnalyticsDashboard';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/description/:id" element={<JobDescription />} />
+            <Route path="/analytics/:id" element={<AnalyticsDashboard />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/saved-jobs" element={<SavedJobs />} />

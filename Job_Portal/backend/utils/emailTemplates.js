@@ -237,9 +237,56 @@ const emailTemplates = {
   }),
 
   // Application status update
-  applicationStatusUpdate: (candidateName, jobTitle, status, message) => ({
-    subject: `Application Update: ${jobTitle}`,
-    html: `
+  // Application status update
+  applicationStatusUpdate: (candidateName, jobTitle, status, message = '') => {
+    // Log for debugging
+    console.log('📧 Email Template Called:', { candidateName, jobTitle, status, message, messageLength: message ? message.length : 0 });
+    
+    const getHeaderColor = () => {
+      if (status === 'rejected') return '#f5576c 0%, #fa709a';
+      if (status === 'accepted') return '#11998e 0%, #38ef7d';
+      return '#fa709a 0%, #fee140';
+    };
+    
+    const getHeaderTitle = () => {
+      if (status === 'rejected') return '❌ Application Status Update';
+      if (status === 'accepted') return '🎉 Congratulations!';
+      return '📬 Application Status Update';
+    };
+    
+    const getStatusMessage = () => {
+      if (status === 'rejected') 
+        return `<p>We regret to inform you that your application for the position of <strong>${jobTitle}</strong> has been <strong>rejected</strong>.</p>`;
+      if (status === 'accepted')
+        return `<p>Congratulations! We are pleased to inform you that your application for the position of <strong>${jobTitle}</strong> has been <strong>accepted</strong>!</p>`;
+      return `<p>We have an update regarding your application for <strong>${jobTitle}</strong>.</p>`;
+    };
+    
+    const getFeedbackSection = () => {
+      console.log('🔍 Checking feedback:', { status, message, hasMessage: !!message });
+      if (status === 'rejected' && message && message.trim()) {
+        return `
+          <div class="rejection-reason">
+            <strong>📋 Feedback from Company:</strong>
+            <p>${message}</p>
+          </div>
+        `;
+      }
+      if (message && message.trim()) {
+        return `<p><strong>Message from employer:</strong><br>${message}</p>`;
+      }
+      return '';
+    };
+    
+    const getAcceptanceMessage = () => {
+      return status === 'accepted' ? '<p>Our team will reach out to you with further details soon.</p>' : '';
+    };
+
+    const feedbackHtml = getFeedbackSection();
+    
+    return {
+      subject: status === 'rejected' ? `Application Rejected: ${jobTitle}` : `Application Update: ${jobTitle}`,
+      html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -247,31 +294,35 @@ const emailTemplates = {
         <style>
           body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
           .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 30px; text-align: center; }
+          .header { background: linear-gradient(135deg, ${getHeaderColor()}); color: white; padding: 30px; text-align: center; }
           .content { padding: 30px; color: #333333; line-height: 1.6; }
           .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }
           .status-accepted { background-color: #d4edda; color: #155724; }
           .status-rejected { background-color: #f8d7da; color: #721c24; }
           .status-reviewing { background-color: #d1ecf1; color: #0c5460; }
           .status-shortlisted { background-color: #fff3cd; color: #856404; }
+          .rejection-reason { background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; border-radius: 5px; }
           .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 14px; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>📬 Application Status Update</h1>
+            <h1>${getHeaderTitle()}</h1>
           </div>
           <div class="content">
             <h2>Dear ${candidateName},</h2>
-            <p>We have an update regarding your application for <strong>${jobTitle}</strong>.</p>
+            
+            ${getStatusMessage()}
             
             <p>
               <strong>Current Status:</strong> 
               <span class="status-badge status-${status.toLowerCase()}">${status.toUpperCase()}</span>
             </p>
             
-            ${message ? `<p><strong>Message from employer:</strong><br>${message}</p>` : ''}
+            ${feedbackHtml}
+            
+            ${getAcceptanceMessage()}
             
             <p>You can view more details by logging into your dashboard.</p>
             
@@ -283,8 +334,9 @@ const emailTemplates = {
         </div>
       </body>
       </html>
-    `,
-  }),
+    `
+    };
+  },
 };
 
 export default emailTemplates;

@@ -1,10 +1,28 @@
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
+import { APPLICATION_API_END_POINT } from '@/utils/constant';
+import { toast } from 'sonner';
 
 const AppliedJobTable = () => {
     const { allAppliedJobs } = useSelector(store => store.job);
+    
+    const handleReapply = async (jobId) => {
+        try {
+            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, {withCredentials:true});
+            if(res.data.success){
+                toast.success("Application resubmitted successfully!");
+                // Refresh the page to show updated status
+                window.location.reload();
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response?.data?.message || "Failed to reapply for job");
+        }
+    }
     
     return (
         <div>
@@ -16,6 +34,7 @@ const AppliedJobTable = () => {
                         <TableHead>Job Role</TableHead>
                         <TableHead>Company</TableHead>
                         <TableHead className="text-right">Status</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -43,6 +62,17 @@ const AppliedJobTable = () => {
                                         >
                                             {appliedJob?.status?.toUpperCase()}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {appliedJob?.status === 'rejected' && (
+                                            <Button 
+                                                onClick={() => handleReapply(appliedJob?.job?._id)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                size="sm"
+                                            >
+                                                Reapply
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))

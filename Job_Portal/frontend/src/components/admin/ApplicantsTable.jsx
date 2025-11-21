@@ -23,6 +23,7 @@ const ApplicantsTable = () => {
                     toast.error('Feedback is required to reject an applicant.');
                     return;
                 }
+                console.log('📝 Rejection feedback entered:', { message, messageLength: message.length });
             } else if (normalizedStatus === 'accepted') {
                 const optionalMessage = window.prompt('Optional: add a short message for the candidate (press Cancel to skip).');
                 if (optionalMessage && optionalMessage.trim()) {
@@ -30,6 +31,7 @@ const ApplicantsTable = () => {
                 }
             }
 
+            console.log('🚀 Sending status update:', { status, message, messageLength: message ? message.length : 0 });
             axios.defaults.withCredentials = true;
             const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`, { status, message });
             if (res.data.success) {

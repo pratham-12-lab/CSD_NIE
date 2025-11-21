@@ -8,3 +8,4 @@ export const EMAIL_API_END_POINT = `${API_BASE_URL}/email`;
 export const SAVED_JOBS_API_END_POINT = `${API_BASE_URL}/saved-jobs`;
 export const JOB_ALERT_API_END_POINT = `${API_BASE_URL}/job-alerts`; // ✅ NEW
 export const CHATBOT_API_END_POINT = `${API_BASE_URL}/chatbot`; // ✅ Chatbot endpoint
+export const ANALYTICS_API_END_POINT = `${API_BASE_URL}/analytics`;
