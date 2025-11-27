@@ -20,15 +20,10 @@ export const applyJob = async (req, res) => {
     const existingApplication = await Application.findOne({ job: jobId, applicant: userId });
 
     if (existingApplication) {
-      // Allow reapplication only if the previous application was rejected
-      if (existingApplication.status !== 'rejected') {
-        return res.status(400).json({
-          success: false,
-          message: "You have already applied for this job."
-        });
-      }
-      // If rejected, delete the old application and create a new one
-      await Application.findByIdAndDelete(existingApplication._id);
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied for this job."
+      });
     }
 
     // Check if job exists

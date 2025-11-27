@@ -208,8 +208,8 @@ const Chatbot = () => {
                   </div>
                 )}
 
-                {/* Display Job Cards */}
-                {msg.jobs && msg.jobs.length > 0 && (
+                {/* Display Job Cards or No Results Message */}
+                {msg.jobs && msg.jobs.length > 0 ? (
                   <div className="mt-2 w-full max-w-[85%] space-y-2">
                     {msg.jobs.map((job) => (
                       <div
@@ -243,7 +243,12 @@ const Chatbot = () => {
                       </div>
                     ))}
                   </div>
-                )}
+                ) : msg.location && msg.content.includes('No jobs found') ? (
+                  <div className="mt-2 w-full max-w-[85%] bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800 font-semibold">❌ No jobs found in {msg.location}</p>
+                    <p className="text-xs text-yellow-700 mt-2">The chatbot couldn't find any matching positions. Try searching in other locations or adjusting your criteria!</p>
+                  </div>
+                ) : null}
               </div>
             ))}
             {isLoading && (

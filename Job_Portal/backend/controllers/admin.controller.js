@@ -1,5 +1,7 @@
 import { User } from "../models/user.model.js";
 import emailService from "../services/emailService.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 // GET ALL PENDING EMPLOYERS
 export const getPendingEmployers = async (req, res) => {
@@ -172,5 +174,90 @@ export const getEmployerDetails = async (req, res) => {
             success: false,
             message: "Error fetching employer details"
         });
+    }
+};
+
+// ADMIN: Create recruiter (approved) - Admin-only
+export const createRecruiter = async (req, res) => {
+    try {
+        const { fullname, email, phoneNumber, password, companyName, companyWebsite } = req.body;
+
+        if (!fullname || !email || !phoneNumber || !password || !companyName) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required for recruiter creation"
+            });
+        }
+
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "User already exists with this email" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const recruiter = await User.create({
+            fullname,
+            email,
+            phoneNumber,
+            password: hashedPassword,
+            role: 'recruiter',
+            companyName,
+            companyWebsite,
+            isVerified: true,
+            verificationStatus: 'approved'
+        });
+
+        // Send welcome email to recruiter
+        await emailService.sendWelcomeEmail(email, fullname, 'employer');
+
+        return res.status(201).json({ success: true, message: 'Recruiter created and approved', recruiter: {
+            id: recruiter._id,
+            fullname: recruiter.fullname,
+            email: recruiter.email,
+            companyName: recruiter.companyName
+        }});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ success: false, message: 'Error creating recruiter' });
+    }
+};
+
+// ADMIN LOGIN - separate admin login endpoint
+export const adminLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Email and password are required' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Incorrect email or password' });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not an admin account' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Incorrect email or password' });
+        }
+
+        const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
+
+        const safeUser = {
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            role: user.role
+        };
+
+        return res.status(200).cookie('token', token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({ success: true, message: `Welcome back ${user.fullname}`, user: safeUser });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ success: false, message: 'Admin login failed' });
     }
 };

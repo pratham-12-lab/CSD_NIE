@@ -5,17 +5,23 @@ import { Avatar, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { SAVED_JOBS_API_END_POINT } from '@/utils/constant';
+import { SAVED_JOBS_API_END_POINT, APPLICATION_API_END_POINT } from '@/utils/constant';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
 
 const Job = ({ job }) => {
     const navigate = useNavigate();
+    const { user } = useSelector(store => store.auth);
     const [isSaved, setIsSaved] = useState(false);
+    const [isApplied, setIsApplied] = useState(false);
+    const [isRejected, setIsRejected] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [applyLoading, setApplyLoading] = useState(false);
 
     useEffect(() => {
         checkIfSaved();
-    }, [job._id]);
+        checkIfApplied();
+    }, [job._id, user?._id]);
 
     const checkIfSaved = async () => {
         try {
@@ -27,6 +33,43 @@ const Job = ({ job }) => {
             }
         } catch (error) {
             console.log(error);
+        }
+    };
+
+    const checkIfApplied = async () => {
+        try {
+            // Check for active application (not rejected)
+            const hasActiveApplication = job?.applications?.some(
+                application => application.applicant === user?._id && application.status !== 'rejected'
+            ) || false;
+            setIsApplied(hasActiveApplication);
+
+            // Check for rejected application
+            const hasRejectedApplication = job?.applications?.some(
+                application => application.applicant === user?._id && application.status === 'rejected'
+            ) || false;
+            setIsRejected(hasRejectedApplication);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleApply = async () => {
+        setApplyLoading(true);
+        try {
+            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${job._id}`, {
+                withCredentials: true
+            });
+            if (res.data.success) {
+                setIsApplied(true);
+                setIsRejected(false); // Clear rejected status on reapply
+                toast.success(res.data.message || 'Applied successfully');
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response?.data?.message || 'Failed to apply');
+        } finally {
+            setApplyLoading(false);
         }
     };
 
@@ -122,8 +165,19 @@ const Job = ({ job }) => {
                 >
                     Details
                 </Button>
-                <Button className="bg-[#7209b7]">
-                    Save For Later
+                <Button 
+                    onClick={handleApply}
+                    disabled={isApplied || applyLoading}
+                    className={`${
+                        isApplied 
+                            ? 'bg-gray-600 cursor-not-allowed' 
+                            : isRejected
+                            ? 'bg-orange-600 hover:bg-orange-700'
+                            : 'bg-[#7209b7] hover:bg-[#5f32ad]'
+                    }`}
+                    title={isRejected ? 'Improve your skills and reapply' : ''}
+                >
+                    {applyLoading ? 'Applying...' : isApplied ? 'Already Applied' : isRejected ? 'Reapply Now' : 'Apply'}
                 </Button>
             </div>
         </div>

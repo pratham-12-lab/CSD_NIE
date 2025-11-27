@@ -253,11 +253,13 @@ router.post('/chat', async (req, res) => {
           json: (data) => {
             if (data.success) {
               let reply = data.reply;
-              // Enhance reply if jobs were found
-              if (jobs.length > 0) {
-                reply += `\n\nI found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}. Check them out below!`;
-              } else if (location) {
-                reply += `\n\nI couldn't find any jobs in ${location} at the moment. Try searching for jobs in other cities or check back later!`;
+              // Enhance reply with job search results
+              if (location) {
+                if (jobs.length > 0) {
+                  reply += `\n\n✅ I found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}! Here they are:`;
+                } else {
+                  reply += `\n\n❌ No jobs found in ${location} at the moment. 😞\n\nTry:\n- Searching in nearby cities\n- Adjusting your filters\n- Checking back later for new postings\n- Using Job Alerts to get notified!`;
+                }
               }
               
               return res.status(200).json({
@@ -341,11 +343,13 @@ ${applicationsContextText}`;
     const result = await chat.sendMessage(messageToSend);
     let reply = result.response.text();
     
-    // Enhance reply if jobs were found
-    if (jobs.length > 0) {
-      reply += `\n\nI found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}. Check them out below!`;
-    } else if (location) {
-      reply += `\n\nI couldn't find any jobs in ${location} at the moment. Try searching for jobs in other cities or check back later!`;
+    // Enhance reply with job search results
+    if (location) {
+      if (jobs.length > 0) {
+        reply += `\n\n✅ I found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}! Here they are:`;
+      } else {
+        reply += `\n\n❌ No jobs found in ${location} at the moment. 😞\n\nTry:\n- Searching in nearby cities\n- Adjusting your filters\n- Checking back later for new postings\n- Using Job Alerts to get notified!`;
+      }
     }
     
     console.log(`🤖 Bot reply: ${reply.substring(0, 50)}...`);
@@ -404,11 +408,13 @@ ${applicationsContextText}`;
           json: (data) => {
             if (data.success) {
               let reply = data.reply;
-              // Enhance reply if jobs were found
-              if (jobs && jobs.length > 0) {
-                reply += `\n\nI found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}. Check them out below!`;
-              } else if (location) {
-                reply += `\n\nI couldn't find any jobs in ${location} at the moment. Try searching for jobs in other cities or check back later!`;
+              // Enhance reply with job search results
+              if (location) {
+                if (jobs && jobs.length > 0) {
+                  reply += `\n\n✅ I found ${jobs.length} job${jobs.length > 1 ? 's' : ''} in ${location}! Here they are:`;
+                } else {
+                  reply += `\n\n❌ No jobs found in ${location} at the moment. 😞\n\nTry:\n- Searching in nearby cities\n- Adjusting your filters\n- Checking back later for new postings\n- Using Job Alerts to get notified!`;
+                }
               }
               
               return res.status(200).json({

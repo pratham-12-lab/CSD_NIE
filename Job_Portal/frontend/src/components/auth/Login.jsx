@@ -117,11 +117,18 @@ const Login = () => {
         toast.success(res.data.message);
         
         setTimeout(() => {
+          // ✅ SECURITY: Prevent unauthorized admin access
           if (userRole === 'admin') {
+            // Admin accounts should be pre-verified and created by system
             navigate("/admin/dashboard", { replace: true });
           } else if (userRole === 'recruiter') {
             if (verificationStatus === 'pending') {
               navigate("/pending-verification", { replace: true });
+            } else if (verificationStatus === 'rejected') {
+              // ✅ NEW: Block rejected recruiters from accessing recruiter dashboard
+              toast.error('Your account has been rejected. Please contact support.');
+              navigate("/", { replace: true });
+              return;
             } else {
               navigate("/admin/companies", { replace: true });
             }
@@ -238,18 +245,8 @@ const Login = () => {
                 />
                 <Label htmlFor="r2" className="cursor-pointer text-gray-700">Recruiter</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  name="role"
-                  value="admin"
-                  id="r3"
-                  checked={input.role === 'admin'}
-                  onChange={changeEventHandler}
-                  className="cursor-pointer w-4 h-4"
-                />
-                <Label htmlFor="r3" className="cursor-pointer text-gray-700">Admin</Label>
-              </div>
+              {/* ✅ SECURITY: Admin option removed from UI - only accessible via backend verification */}
+              {/* To maintain security, admin accounts are created only by verified systems */}
             </RadioGroup>
           </div>
 

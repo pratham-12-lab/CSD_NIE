@@ -5,3 +5,24 @@ Password:Prathaml123@
 Recruiter:
 prathamlmysore2005@gmail.com
 Password:Password123@
+
+Student:
+prathamlgaikwad468@gmail.com
+password:Password123@
+
+http://localhost:5173/api/users/login
+{
+"email": "admin@jobportal.com",
+"password": "Admin@123456",
+"role": "admin"
+}
+
+http://localhost:5173/api/admin/employers/pending
+
+http://localhost:5173/api/admin/employers/EMPLOYER_ID/approve
+
+Recuiter 2:
+Password:Password123@
+gamil:lnraomysore1968@gmail.com
+
+http://localhost:5173/api/users/register
